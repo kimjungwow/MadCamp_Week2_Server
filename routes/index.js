@@ -17,7 +17,7 @@ app.get('/api/contacts', function (req, res) {
 // GET SINGLE CONTACT
 app.get('/api/contacts/:contact_id', function (req, res) {
     Contact.findOne({
-        _id: req.params.contact_id
+        id: req.params.contact_id
     }, function (err, contact) {
         if (err) return res.status(500).json({
             error: err
@@ -68,6 +68,26 @@ app.get('/api/contacts/name/:name', function (req, res) {
     })
 });
 
+// GET CONTACT BY NAME
+app.get('/api/contacts/fbid/:fbid', function (req, res) {
+    Contact.find({
+        fbid: req.params.fbid
+    }, {
+        _id: 0,
+        number: 1,
+        name: 1
+        /*img: 1*/
+    }, function (err, contacts) {
+        if (err) return res.status(500).json({
+            error: err
+        });
+        if (contacts.length === 0) return res.status(404).json({
+            error: 'contact not found'
+        });
+        res.json(contacts);
+    })
+});
+
 
 // CREATE CONTACT
 app.post('/api/contacts', function (req, res) {
@@ -76,6 +96,7 @@ app.post('/api/contacts', function (req, res) {
     contact.name = req.body.name;
     contact.number = req.body.number;
     contact.img = req.body.img;
+    contact.fbid = req.body.fbid;
 
 
 
@@ -119,6 +140,7 @@ app.post('/api/contacts', function (req, res) {
 app.put('/api/contacts/:contact_id', function (req, res) {
     Contact.update({
         _id: req.params.contact_id,
+        fbid: req.body.fbid,
         name: req.body.name,
         number: req.body.number
     }, {
