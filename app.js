@@ -16,7 +16,7 @@ db.once('open', function () {
     console.log("Connected to mongod server");
 });
 
-mongoose.connect('mongodb://localhost/mongodb_tutorial');
+mongoose.connect('mongodb://localhost/mongodb_tutorial',{useMongoClient: true});
 
 // DEFINE MODEL
 var Contact = require('./models/contact');
