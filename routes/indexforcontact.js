@@ -2,6 +2,7 @@ const {
     MongoClient
 } = require('mongodb');
 
+
 module.exports = function (app, Contact) {
 
     // GET ALL CONTACTS
