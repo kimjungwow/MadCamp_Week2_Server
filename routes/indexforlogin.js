@@ -1,7 +1,10 @@
+var express = require('express');
+var router = express.Router();
+
 module.exports = function (app, Login) {
 
     // GET ALL LOGINS
-    app.get('/api/logins', function (req, res) {
+    router.get('', function (req, res) {
         Login.find(function (err, logins) {
             if (err) return res.status(500).send({
                 error: 'database failure'
@@ -13,7 +16,7 @@ module.exports = function (app, Login) {
     });
 
     // GET SINGLE LOGIN
-    app.get('/api/logins/:fbid', function (req, res) {
+    router.get('/:fbid', function (req, res) {
         Login.find({
             fbid: req.params.fbid
         }, function (err, login) {
@@ -28,7 +31,7 @@ module.exports = function (app, Login) {
     });
 
     // GET LOGIN BY NUMBER
-    app.get('/api/logins/number/:number', function (req, res) {
+    router.get('/number/:number', function (req, res) {
         Login.find({
             number: req.params.number
         }, {
@@ -48,7 +51,7 @@ module.exports = function (app, Login) {
 
 
     // GET LOGIN BY NAME
-    app.get('/api/logins/name/:name', function (req, res) {
+    router.get('/name/:name', function (req, res) {
         Login.find({
             name: req.params.name
         }, {
@@ -67,7 +70,7 @@ module.exports = function (app, Login) {
     });
 
     // GET LOGIN BY Facebook ID
-    app.get('/api/logins/fbid/:fbid', function (req, res) {
+    router.get('/fbid/:fbid', function (req, res) {
         Login.find({
             fbid: req.params.fbid
         }, {
@@ -88,7 +91,7 @@ module.exports = function (app, Login) {
 
 
     // CREATE LOGIN
-    app.post('/api/logins', function (req, res) {
+    router.post('', function (req, res) {
 
 
         Login.find({
@@ -135,7 +138,7 @@ module.exports = function (app, Login) {
 
 
     // UPDATE THE LOGIN
-    app.put('/api/logins/:login_id', function (req, res) {
+    router.put('/:login_id', function (req, res) {
         Login.update({
             _id: req.params.login_id,
             fbid: req.body.fbid,
@@ -175,7 +178,7 @@ module.exports = function (app, Login) {
 
 
     // DELETE ALL LOGINS OF SPECIFIC ACCOUNT
-    app.delete('/api/logins/:fbid', function (req, res) {
+    router.delete('/:fbid', function (req, res) {
         Login.remove({
             fbid: req.params.fbid
         }, function (err, output) {
@@ -194,7 +197,7 @@ module.exports = function (app, Login) {
     });
 
     // DELETE ALL LOGINS
-    app.delete('/api/logins', function (req, res) {
+    router.delete('', function (req, res) {
         Login.remove({}, function (err, output) {
             if (err) return res.status(500).json({
                 error: "database failure"
@@ -210,8 +213,6 @@ module.exports = function (app, Login) {
         })
     });
 
-
-
-
+    return router;
 
 }
