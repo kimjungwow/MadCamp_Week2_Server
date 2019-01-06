@@ -22,6 +22,7 @@ mongoose.connect('mongodb://localhost/mongodb_tutorial',{useMongoClient: true});
 var Contact = require('./models/contact');
 var Login = require('./models/login');
 var Gallery = require('./models/gallery');
+var Horse = require('./models/horse');
 
 // [CONFIGURE APP TO USE bodyParser]
 app.use(bodyParser.urlencoded({
@@ -45,7 +46,9 @@ app.use('/api/contacts', contactRouter);
 var loginRouter = require('./routes/indexforlogin')(app, Login);
 app.use('/api/logins', loginRouter);
 var galleryRouter = require('./routes/indexforgallery')(app, Gallery);
-app.use('/api/gallerys', galleryRouter)
+app.use('/api/gallerys', galleryRouter);
+var horseRouter = require('./routes/indexforhorse')(app, Horse);
+app.use('/api/horses', horseRouter);
 
 
 

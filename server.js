@@ -13,15 +13,23 @@ db.once('open', function () {
     console.log("Connected to mongod server");
 });
 
-mongoose.connect('mongodb://localhost/mongodb_tutorial',{useMongoClient: true});
+mongoose.connect('mongodb://localhost/mongodb_tutorial', {
+    useMongoClient: true
+});
 
 var server = http.createServer(function (req, res) {
 
 }).listen(3389, function () {
-// }).listen(80, function () {
+    // }).listen(80, function () {
     console.log('Server running at http://143.248.140.251:9089');
 });
 
+
+// DEFINE MODEL
+var Contact = require('./models/contact');
+var Login = require('./models/login');
+var Gallery = require('./models/gallery');
+var Horse = require('./models/horse');
 
 // [CONFIGURE APP TO USE bodyParser]
 app.use(bodyParser.urlencoded({
@@ -34,9 +42,26 @@ app.use(bodyParser.json({
 }));
 
 
-var Login = require('./models/login');
-var router2 = require('./routes/indexforlogin')(app, Login);
+// [CONFIGURE ROUTER]
+var contactRouter = require('./routes/indexforcontact')(app, Contact);
+app.use('/api/contacts', contactRouter);
+var loginRouter = require('./routes/indexforlogin')(app, Login);
+app.use('/api/logins', loginRouter);
+var galleryRouter = require('./routes/indexforgallery')(app, Gallery);
+app.use('/api/gallerys', galleryRouter);
+var horseRouter = require('./routes/indexforhorse')(app, Horse);
+app.use('/api/horses', horseRouter);
+
+
+
+
+// var router2 = require('./routes/indexforlogin')(app, Login);
+
+
 var loginresult;
+loginresult = {
+    result: '4'
+};
 
 // 소켓 서버를 생성한다.
 var io = socketio.listen(server);
@@ -44,22 +69,18 @@ io.sockets.on('connection', function (socket) {
     console.log('Socket ID : ' + socket.id + ', Connect');
     socket.on('clientMessage', function (data) {
         // console.log('Client Message : ' + data);
-
-
-
-
         if (data.option === "signin") {
-            console.log('signin request. ID=' + data.id);
-
             Login.find({
                 id: data.id
             }, function (err, logins) {
+                console.log('signin request. ID=' + data.id);
                 if (logins.length === 0) {
                     console.log('Account does not exist.');
                     loginresult = {
                         result: '0',
                         alert: 'Account does not exist.'
                     };
+                    socket.disconnect(0);
                 } else {
 
                     Login.find({
@@ -71,15 +92,18 @@ io.sockets.on('connection', function (socket) {
                             loginresult = {
                                 result: '1'
                             };
+                            console.log('changed' + loginresult.result);
                             socket.emit('serverMessage', loginresult);
+                            socket.disconnect(0);
                         } else {
                             console.log('Sign In successfully');
                             loginresult = {
                                 result: '2',
-                                alert:'Sign In successfully'
+                                alert: 'Sign In successfully'
                             };
+                            console.log("changed" + loginresult.result);
                             socket.emit('serverMessage', loginresult);
-                            return;
+
                         }
                     });
 
@@ -88,18 +112,18 @@ io.sockets.on('connection', function (socket) {
             });
 
         } else if (data.option === 'signup') {
-            console.log('signup request. ID='+data.id);
+            console.log('signup request. ID=' + data.id);
             Login.find({
                 id: data.id
             }, function (err, logins) {
-                console.log('1111');
-                if (logins.length ===0) {
-                    console.log('2222');
+
+                if (logins.length === 0) {
+
                     var login = new Login();
                     login.id = data.id;
                     login.password = data.password;
 
-                    console.log('3333');
+
                     login.save(function (err) {
                         if (err) {
                             console.error(err);
@@ -110,10 +134,7 @@ io.sockets.on('connection', function (socket) {
                             result: '2'
                         };
                         socket.emit('serverMessage', loginresult);
-                        
                     });
-
-
                 } else {
                     console.log("Account already exists")
                     loginresult = {
@@ -122,25 +143,125 @@ io.sockets.on('connection', function (socket) {
 
                     };
                     socket.emit('serverMessage', loginresult);
+                    socket.disconnect(0);
                 }
             });
+        } else if (data.option === 'game') {
+            Horse.find({}, {
+                _id: 0,
+                speed: 1,
+                name: 1,
+                location: 1
+
+            }, function (err, horses) {
+
+
+                var i = 1;
+
+                function myLoop() { //  create a loop function
+                    setTimeout(function () { //  call a 0.5s setTimeout when the loop is called
+
+
+                        // a(socket, i);
+
+                        if (data.number === 1) {
+                            Horse.findOne({
+                                name: "Alpha"
+                            }).then(function (docs) {
+                                docs.location = docs.speed * i;
+
+                                socket.emit('serverMessage', [{
+                                    "name": docs.name
+                                }, {
+                                    "time": i
+                                }, {
+                                    "location": docs.location
+                                }]);
+                            });
+                        } else if (data.number === 2) {
+                            Horse.findOne({
+                                name: "Bravo"
+                            }).then(function (docs) {
+                                docs.location = docs.speed * i;
+
+                                socket.emit('serverMessage', [{
+                                    "name": docs.name
+                                }, {
+                                    "time": i
+                                }, {
+                                    "location": docs.location
+                                }]);
+                            });
+                        } else if (data.number === 3) {
+                            Horse.findOne({
+                                name: "Charlie"
+                            }).then(function (docs) {
+                                docs.location = docs.speed * i;
+
+                                socket.emit('serverMessage', [{
+                                    "name": docs.name
+                                }, {
+                                    "time": i
+                                }, {
+                                    "location": docs.location
+                                }]);
+                            });
+                        }
+
+                        // alert('hello'); //  your code here
+                        i++; //  increment the counter
+                        if (i <= 10) { //  if the counter < 10, call the loop function
+                            myLoop(); //  ..  again which will trigger another 
+                        } //  ..  setTimeout()
+                    }, 500)
+                }
+
+                myLoop(); //  start the loop
+            })
+
+
         }
 
-
-
-        // var message = {
-        //     msg : 'server',
-        //     data : 'data'
-        // };
-        // socket.emit('serverMessage', message);
-
-
-        
-        
     });
 });
 
+function a(p, i) {
+    var testList = new Array();
 
 
+    Horse.findOne({
+        name: "Alpha"
+    }).then(function (docs) {
+        docs.location = docs.speed * i;
+
+        p.emit('serverMessage', [{
+            "name": docs.name
+        }, {
+            "time": i
+        }, {
+            "location": docs.location
+        }]);
+    });
+
+    // Horse.findOne({
+    //     name: "Bravo"
+    // }).then(function (docs) {
+    //     docs.location=docs.speed*i;
+    //     names[1]=docs.name;
+    //     locations[1]=docs.location;
+    //     p.emit('serverMessage', [{"name":docs.name}, {"time":i}, {"location":docs.location}]);
+    // });
+
+    // Horse.findOne({
+    //     name: "Charlie"
+    // }).then(function (docs) {
+    //     docs.location=docs.speed*i;
+    //     names[2]=docs.name;
+    //     locations[2]=docs.location;
+    //     p.emit('serverMessage', [{"name":docs.name}, {"time":i}, {"location":docs.location}]);
 
 
+    // });
+
+
+}
