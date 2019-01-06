@@ -38,7 +38,6 @@ db.once('open', function () {
     //   });
 
     //   const chunks = [];
-
     //   readStream.on("data", function (chunk) {
     //     chunks.push(chunk);
     //   });
@@ -53,6 +52,7 @@ db.once('open', function () {
     var Contact = require('./models/contact');
     var Login = require('./models/login');
     var Gallery = require('./models/gallery');
+    var Horse = require('./models/horse');
 
     // [CONFIGURE APP TO USE bodyParser]
     app.use(bodyParser.urlencoded({
@@ -77,6 +77,8 @@ db.once('open', function () {
     app.use('/api/logins', loginRouter);
     var galleryRouter = require('./routes/indexforgallery')(app, Gallery, gfs);
     app.use('/api/galleries', galleryRouter)
+    var horseRouter = require('./routes/indexforhorse')(app, Horse);
+    app.use('/api/horses', horseRouter);
 
 
 
@@ -85,19 +87,3 @@ db.once('open', function () {
         console.log("Express server has started on port " + port)
     });
 });
-
-
-
-
-
-// const Readable = require('stream').Readable;
-// const s = new Readable();
-// s._read = () => {}; // redundant? see update below
-// s.push('your text here');
-
-//   // create or save a file to gridfs
-// const readStream = fs.createReadStream(s);
-// const options = ({ filename: 'sample.txt', contentType: 'text/plain' });
-// gfs.write(options, readStream, (error, file) => { console.log(file); });
-
-
