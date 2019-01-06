@@ -21,6 +21,7 @@ mongoose.connect('mongodb://localhost/mongodb_tutorial',{useMongoClient: true});
 // DEFINE MODEL
 var Contact = require('./models/contact');
 var Login = require('./models/login');
+var Gallery = require('./models/gallery');
 
 // [CONFIGURE APP TO USE bodyParser]
 app.use(bodyParser.urlencoded({
@@ -36,10 +37,17 @@ app.use(bodyParser.json({
 
 
 var port = process.env.PORT || 80;
+console.log(port);
 
 // [CONFIGURE ROUTER]
-var router = require('./routes/indexforcontact')(app, Contact);
-var router2 = require('./routes/indexforlogin')(app, Login);
+var contactRouter = require('./routes/indexforcontact')(app, Contact);
+app.use('/api/contacts', contactRouter);
+var loginRouter = require('./routes/indexforlogin')(app, Login);
+app.use('/api/logins', loginRouter);
+var galleryRouter = require('./routes/indexforgallery')(app, Gallery);
+app.use('/api/gallerys', galleryRouter)
+
+
 
 // [RUN SERVER]
 var server = app.listen(port, function () {

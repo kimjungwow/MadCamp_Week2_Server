@@ -1,12 +1,12 @@
-const {
-    MongoClient
-} = require('mongodb');
+const { MongoClient } = require('mongodb');
 
+var express = require('express');
+var router = express.Router();
 
 module.exports = function (app, Contact) {
 
     // GET ALL CONTACTS
-    app.get('/api/contacts', function (req, res) {
+    router.get('', function (req, res) {
         Contact.find(function (err, contacts) {
             if (err) return res.status(500).send({
                 error: 'database failure'
@@ -18,7 +18,7 @@ module.exports = function (app, Contact) {
     });
 
     // GET SINGLE CONTACT
-    app.get('/api/contacts/:fbid', function (req, res) {
+    router.get('/:fbid', function (req, res) {
         Contact.find({
             fbid: req.params.fbid
         }, function (err, contact) {
@@ -33,7 +33,7 @@ module.exports = function (app, Contact) {
     });
 
     // GET CONTACT BY NUMBER
-    app.get('/api/contacts/number/:number', function (req, res) {
+    router.get('/number/:number', function (req, res) {
         Contact.find({
             number: req.params.number
         }, {
@@ -53,7 +53,7 @@ module.exports = function (app, Contact) {
 
 
     // GET CONTACT BY NAME
-    app.get('/api/contacts/name/:name', function (req, res) {
+    router.get('/name/:name', function (req, res) {
         Contact.find({
             name: req.params.name
         }, {
@@ -72,7 +72,7 @@ module.exports = function (app, Contact) {
     });
 
     // GET CONTACT BY Facebook ID
-    app.get('/api/contacts/fbid/:fbid', function (req, res) {
+    router.get('/fbid/:fbid', function (req, res) {
         Contact.find({
             fbid: req.params.fbid
         }, {
@@ -93,7 +93,7 @@ module.exports = function (app, Contact) {
 
 
     // CREATE CONTACT
-    app.post('/api/contacts', function (req, res) {
+    router.post('', function (req, res) {
 
 
         Contact.find({
@@ -140,7 +140,7 @@ module.exports = function (app, Contact) {
 
 
     // UPDATE THE CONTACT
-    app.put('/api/contacts/:contact_id', function (req, res) {
+    router.put('/:contact_id', function (req, res) {
         Contact.update({
             _id: req.params.contact_id,
             fbid: req.body.fbid,
@@ -180,7 +180,7 @@ module.exports = function (app, Contact) {
 
 
     // DELETE ALL CONTACTS OF SPECIFIC ACCOUNT
-    app.delete('/api/contacts/:fbid', function (req, res) {
+    router.delete('/:fbid', function (req, res) {
         Contact.remove({
             fbid: req.params.fbid
         }, function (err, output) {
@@ -199,7 +199,7 @@ module.exports = function (app, Contact) {
     });
 
     // DELETE ALL CONTACTS
-    app.delete('/api/contacts', function (req, res) {
+    router.delete('', function (req, res) {
         Contact.remove({}, function (err, output) {
             if (err) return res.status(500).json({
                 error: "database failure"
@@ -215,8 +215,6 @@ module.exports = function (app, Contact) {
         })
     });
 
-
-
-
+    return router;
 
 }
