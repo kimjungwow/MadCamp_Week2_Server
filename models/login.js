@@ -5,6 +5,7 @@ var loginSchema = new Schema({
     id: String,
     password: String,
     option: String,
-    number: Number
+    number: Number,
+    balance: Number
 });
 module.exports = mongoose.model('login', loginSchema);

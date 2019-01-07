@@ -93,7 +93,7 @@ io.sockets.on('connection', function (socket) {
 
                 }
             });
-
+// Required: Zero-100, Max Speed, Fall-off Percent, diviend rate
         } else if (data.option === 'signup') {
             console.log('signup request. ID=' + data.id);
             Login.find({
