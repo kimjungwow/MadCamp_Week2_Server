@@ -80,7 +80,7 @@ io.sockets.on('connection', function (socket) {
                         result: '0',
                         alert: 'Account does not exist.'
                     };
-                    socket.disconnect(0);
+                    socket.disconnect(true);
                 } else {
 
                     Login.find({
@@ -94,7 +94,7 @@ io.sockets.on('connection', function (socket) {
                             };
                             console.log('changed' + loginresult.result);
                             socket.emit('serverMessage', loginresult);
-                            socket.disconnect(0);
+                            socket.disconnect(true);
                         } else {
                             console.log('Sign In successfully');
                             loginresult = {
@@ -103,6 +103,7 @@ io.sockets.on('connection', function (socket) {
                             };
                             console.log("changed" + loginresult.result);
                             socket.emit('serverMessage', loginresult);
+                            socket.disconnect(true);
 
                         }
                     });
@@ -134,6 +135,7 @@ io.sockets.on('connection', function (socket) {
                             result: '2'
                         };
                         socket.emit('serverMessage', loginresult);
+                        socket.disconnect(true);
                     });
                 } else {
                     console.log("Account already exists")
@@ -143,7 +145,7 @@ io.sockets.on('connection', function (socket) {
 
                     };
                     socket.emit('serverMessage', loginresult);
-                    socket.disconnect(0);
+                    socket.disconnect(true);
                 }
             });
         } else if (data.option === 'game') {
@@ -177,25 +179,25 @@ io.sockets.on('connection', function (socket) {
                         // a(socket, i);
                         Horse.find({
                             location: {
-                                $lt: 100
+                                $lt: 500
                             }
                         }, function (err, horses) {
                             horses.forEach(function (horse) {
                                 // socket.emit(horse.name, [{"name": horse.name}, {"time":i}, {"location": horse.location}] );
 
 
-                                if(horse.location<100) {
-                                    if((horse.speed*i)>100) {
+                                if(horse.location<500) {
+                                    if((horse.speed*i)>500) {
 
-                                        horse.location=100;
-                                        socket.emit(horse.name, [{"name": horse.name}, {"time":i}, {"location": horse.location}] );
+                                        horse.location=500;
+                                        socket.emit(horse.name, [{"speed": horse.speed}, {"time":i}, {"location": horse.location}] );
                                         // console.log(1, horse.name, horse.location);
                                         horse.save();
 
                                     } else {
 
                                         horse.location=horse.speed*i;
-                                        socket.emit(horse.name, [{"name": horse.name}, {"time":i}, {"location": horse.location}] );
+                                        socket.emit(horse.name, [{"speed": horse.speed}, {"time":i}, {"location": horse.location}] );
                                         // console.log(2, horse.name, horse.location);
                                         horse.save();
 
@@ -214,7 +216,7 @@ io.sockets.on('connection', function (socket) {
 
                         // alert('hello'); //  your code here
                         i++; //  increment the counter
-                        if (i < 50) { //  if the counter < 10, call the loop function
+                        if (i < 250) { //  if the counter < 10, call the loop function
                             myLoop(); //  ..  again which will trigger another 
                         } //  ..  setTimeout()
                     }, 50)
