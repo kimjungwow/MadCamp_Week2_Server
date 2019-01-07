@@ -6,20 +6,17 @@ var Readable = require('stream').Readable;
 
 module.exports = function (app, Gallery, gfs) {
 
-    // GET ALL Images Url
+    // GET ALL Images Uri
     router.get('', function (req, res) {
         Gallery.find(function (err, docs) {
             if (err) return res.status(500).send({
                 error: 'database failure'
             });
             res.json(docs);
-        }).sort({
-            "name": 1
-        })
+        });
     });
 
-
-    // GET Images Url BY Facebook ID
+    // GET Images Uri BY Facebook ID
     router.get('/fbid/:fbid', function (req, res) {
         Gallery.find({
             fbid: req.params.fbid
@@ -27,11 +24,35 @@ module.exports = function (app, Gallery, gfs) {
             if (err) return res.status(500).json({
                 error: err
             });
-            // if (docs.length === 0) return res.status(404).json({
-            //     error: 'images not found'
-            // });
             res.json(docs);
         })
+    });
+
+    router.get('/image/:imageHash', function (req, res) {
+        console.log(req.params.imageHash);
+
+        try {
+            var readStream = gfs.createReadStream({
+                "filename": req.params.imageHash
+              });
+
+            const chunks = [];
+
+            readStream.on("data", function (chunk) {
+                    chunks.push(chunk);
+            });
+                
+            // Send the buffer or you can put it into a var
+            readStream.on("end", function () {
+                str = (Buffer.concat(chunks)).toString();
+
+                // console.log(str);
+
+                res.send({"imageHash": req.params.imageHash, "imageFile": str});
+            });
+        } catch (e) {
+            console.log(e);
+        }
     });
 
 
@@ -46,7 +67,6 @@ module.exports = function (app, Gallery, gfs) {
             if (docs.length === 0) {
                 var gallery = new Gallery();
                 
-
                 gallery.fbid = req.body.fbid;
                 gallery.imageHash = req.body.imageHash;
                 gallery.imageUri = req.body.imageUri;
@@ -59,28 +79,9 @@ module.exports = function (app, Gallery, gfs) {
                 tmpStream.pipe(writestream);
 
                 writestream.on('close', function (file) {
-                    console.log(file.filename + "Uploaded!");
+                    console.log(file.filename + " -- Uploaded!");
                     console.log("_id: " + writestream.id);
                 });
-
-                // var readStream = gfs.createReadStream({
-                //     _id: '5c322b64cc385c7c91bb62b9',
-                //   });
-
-                //   const chunks = [];
-
-                //   readStream.on("data", function (chunk) {
-                //     chunks.push(chunk);
-                //   });
-                
-                //   // Send the buffer or you can put it into a var
-                //   readStream.on("end", function () {
-                //     str = (Buffer.concat(chunks)).toString();
-                //     console.log(str);
-                //   });
-
-                // Need to set storage Path!
-                // Connect to the db
 
                
                 gallery.save(function (err) {
@@ -91,9 +92,7 @@ module.exports = function (app, Gallery, gfs) {
                     res.json({
                         "fbid": gallery.fbid,
                         "imageHash": gallery.imageHash,
-                        "imageUri": gallery.imageUrii,
-                        "imageFile": gallery.imageFile
-                        // storagePath =
+                        "imageUri": gallery.imageUri
                     });
                 });
             } else {
