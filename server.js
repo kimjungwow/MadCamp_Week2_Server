@@ -156,64 +156,70 @@ io.sockets.on('connection', function (socket) {
             }, function (err, horses) {
 
 
+
+
                 var i = 1;
+                Horse.find({}, function(err, horses) {
+                    horses.forEach(function (horse) {
+                        horse.location=0;
+                        horse.save();
+
+                    });
+                });
+
+                
 
                 function myLoop() { //  create a loop function
                     setTimeout(function () { //  call a 0.5s setTimeout when the loop is called
 
 
+
                         // a(socket, i);
+                        Horse.find({
+                            location: {
+                                $lt: 100
+                            }
+                        }, function (err, horses) {
+                            horses.forEach(function (horse) {
+                                // socket.emit(horse.name, [{"name": horse.name}, {"time":i}, {"location": horse.location}] );
 
-                        if (data.number === 1) {
-                            Horse.findOne({
-                                name: "Alpha"
-                            }).then(function (docs) {
-                                docs.location = docs.speed * i;
 
-                                socket.emit('serverMessage', [{
-                                    "name": docs.name
-                                }, {
-                                    "time": i
-                                }, {
-                                    "location": docs.location
-                                }]);
+
+
+                                if(horse.location<100) {
+                                    if((horse.speed*i)>100) {
+
+                                        horse.location=100;
+                                        socket.emit(horse.name, [{"name": horse.name}, {"time":i}, {"location": horse.location}] );
+                                        // console.log(1, horse.name, horse.location);
+                                        horse.save();
+
+                                    } else {
+
+                                        horse.location=horse.speed*i;
+                                        socket.emit(horse.name, [{"name": horse.name}, {"time":i}, {"location": horse.location}] );
+                                        // console.log(2, horse.name, horse.location);
+                                        horse.save();
+
+                                    }
+                                }
                             });
-                        } else if (data.number === 2) {
-                            Horse.findOne({
-                                name: "Bravo"
-                            }).then(function (docs) {
-                                docs.location = docs.speed * i;
+                        });
 
-                                socket.emit('serverMessage', [{
-                                    "name": docs.name
-                                }, {
-                                    "time": i
-                                }, {
-                                    "location": docs.location
-                                }]);
-                            });
-                        } else if (data.number === 3) {
-                            Horse.findOne({
-                                name: "Charlie"
-                            }).then(function (docs) {
-                                docs.location = docs.speed * i;
 
-                                socket.emit('serverMessage', [{
-                                    "name": docs.name
-                                }, {
-                                    "time": i
-                                }, {
-                                    "location": docs.location
-                                }]);
-                            });
-                        }
+
+
+
+
+
+
 
                         // alert('hello'); //  your code here
                         i++; //  increment the counter
-                        if (i <= 10) { //  if the counter < 10, call the loop function
+                        if (i < 50) { //  if the counter < 10, call the loop function
                             myLoop(); //  ..  again which will trigger another 
                         } //  ..  setTimeout()
-                    }, 500)
+                    }, 50)
                 }
 
                 myLoop(); //  start the loop
@@ -242,26 +248,5 @@ function a(p, i) {
             "location": docs.location
         }]);
     });
-
-    // Horse.findOne({
-    //     name: "Bravo"
-    // }).then(function (docs) {
-    //     docs.location=docs.speed*i;
-    //     names[1]=docs.name;
-    //     locations[1]=docs.location;
-    //     p.emit('serverMessage', [{"name":docs.name}, {"time":i}, {"location":docs.location}]);
-    // });
-
-    // Horse.findOne({
-    //     name: "Charlie"
-    // }).then(function (docs) {
-    //     docs.location=docs.speed*i;
-    //     names[2]=docs.name;
-    //     locations[2]=docs.location;
-    //     p.emit('serverMessage', [{"name":docs.name}, {"time":i}, {"location":docs.location}]);
-
-
-    // });
-
 
 }
