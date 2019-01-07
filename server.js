@@ -184,8 +184,6 @@ io.sockets.on('connection', function (socket) {
                                 // socket.emit(horse.name, [{"name": horse.name}, {"time":i}, {"location": horse.location}] );
 
 
-
-
                                 if(horse.location<100) {
                                     if((horse.speed*i)>100) {
 
