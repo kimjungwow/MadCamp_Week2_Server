@@ -41,23 +41,6 @@ app.use(bodyParser.json({
     extended: true
 }));
 
-
-// [CONFIGURE ROUTER]
-var contactRouter = require('./routes/indexforcontact')(app, Contact);
-app.use('/api/contacts', contactRouter);
-var loginRouter = require('./routes/indexforlogin')(app, Login);
-app.use('/api/logins', loginRouter);
-var galleryRouter = require('./routes/indexforgallery')(app, Gallery);
-app.use('/api/gallerys', galleryRouter);
-var horseRouter = require('./routes/indexforhorse')(app, Horse);
-app.use('/api/horses', horseRouter);
-
-
-
-
-// var router2 = require('./routes/indexforlogin')(app, Login);
-
-
 var loginresult;
 loginresult = {
     result: '4'
