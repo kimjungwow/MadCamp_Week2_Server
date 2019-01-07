@@ -133,7 +133,7 @@ io.sockets.on('connection', function (socket) {
                 }
             });
         } else if (data.option === 'game') {
-            Horse.updateMany({},(doc) => {doc.location = 0;});
+            Horse.updateMany({},{ $set: { location: 0 }});
 
             var i = 1;
 
