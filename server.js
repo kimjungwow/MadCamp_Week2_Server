@@ -56,19 +56,18 @@ io.sockets.on('connection', function (socket) {
             Login.find({
                 id: data.id
             }, function (err, logins) {
-                console.log('signin request. ID=' + data.id);
+                console.log('signin request. ID = ' + data.id);
                 if (logins.length === 0) {
                     console.log('Account does not exist.');
                     loginresult = {
                         result: '0',
                         alert: 'Account does not exist.'
                     };
+                    socket.emit('serverMessage', loginresult);
                     socket.disconnect(true);
                 } else {
-
                     Login.find({
                         password: data.password
-
                     }, function (err, logins) {
                         if (logins.length === 0) {
                             console.log('Incorrect Password');
@@ -87,16 +86,15 @@ io.sockets.on('connection', function (socket) {
                             console.log("changed" + loginresult.result);
                             socket.emit('serverMessage', loginresult);
                             socket.disconnect(true);
-
                         }
                     });
 
 
                 }
             });
-// Required: Zero-100, Max Speed, Fall-off Percent, diviend rate
+
         } else if (data.option === 'signup') {
-            console.log('signup request. ID=' + data.id);
+            console.log('signup request. ID = ' + data.id);
             Login.find({
                 id: data.id
             }, function (err, logins) {
@@ -106,6 +104,9 @@ io.sockets.on('connection', function (socket) {
                     var login = new Login();
                     login.id = data.id;
                     login.password = data.password;
+
+                    // Set initial balance
+                    login.balance = 300000;
 
 
                     login.save(function (err) {
@@ -132,104 +133,180 @@ io.sockets.on('connection', function (socket) {
                 }
             });
         } else if (data.option === 'game') {
-            Horse.find({}, {
-                _id: 0,
-                speed: 1,
-                name: 1,
-                location: 1
+            Horse.updateMany({},(doc) => {doc.location = 0;});
 
-            }, function (err, horses) {
+            var i = 1;
 
+            function myLoop() { //  create a loop function
+                setTimeout(function () { //  call a 0.5s setTimeout when the loop is called
+                    
+                    Horse.find({}, function (err, horses) {
+                        horses.forEach(function (horse) {
+                                if((horse.speed * i) > 500) {
+                                    horse.location = 500;
+                                    horse.save();
 
-
-
-                var i = 1;
-                Horse.find({}, function(err, horses) {
-                    horses.forEach(function (horse) {
-                        horse.location=0;
-                        horse.save();
-
-                    });
-                });
-
-                
-
-                function myLoop() { //  create a loop function
-                    setTimeout(function () { //  call a 0.5s setTimeout when the loop is called
-
-
-
-                        // a(socket, i);
-                        Horse.find({
-                            location: {
-                                $lt: 500
-                            }
-                        }, function (err, horses) {
-                            horses.forEach(function (horse) {
-                                // socket.emit(horse.name, [{"name": horse.name}, {"time":i}, {"location": horse.location}] );
-
-
-                                if(horse.location<500) {
-                                    if((horse.speed*i)>500) {
-
-                                        horse.location=500;
-                                        socket.emit(horse.name, [{"speed": horse.speed}, {"time":i}, {"location": horse.location}] );
-                                        // console.log(1, horse.name, horse.location);
-                                        horse.save();
-
-                                    } else {
-
-                                        horse.location=horse.speed*i;
-                                        socket.emit(horse.name, [{"speed": horse.speed}, {"time":i}, {"location": horse.location}] );
-                                        // console.log(2, horse.name, horse.location);
-                                        horse.save();
-
-                                    }
+                                } else {
+                                    horse.location = horse.speed * i;
+                                    horse.save();
                                 }
-                            });
-                        });
+                            }
+                        );
+                    });
 
+                    Horse.find().lean().exec(function (err, horses) {
+                        console.log(JSON.stringify(horses));
+                        socket.emit("HorseInfo", JSON.stringify(horses));
+                    });
 
-
-
-
-
-
-
-
-                        // alert('hello'); //  your code here
-                        i++; //  increment the counter
-                        if (i < 250) { //  if the counter < 10, call the loop function
-                            myLoop(); //  ..  again which will trigger another 
-                        } //  ..  setTimeout()
-                    }, 50)
-                }
-
-                myLoop(); //  start the loop
-            })
-
-
+                    i++; //  increment the counter
+                    if (i < 250) { //  if the counter < 10, call the loop function
+                        myLoop(); //  ..  again which will trigger another 
+                    } //  ..  setTimeout()
+                }, 50)
+            }
+            myLoop(); //  start the loop
         }
-
     });
 });
 
-function a(p, i) {
-    var testList = new Array();
+// function a(p, i) {
+//     var testList = new Array();
+
+//     Horse.findOne({
+//         name: "Alpha"
+//     }).then(function (docs) {
+//         docs.location = docs.speed * i;
+
+//         p.emit('serverMessage', [{
+//             "name": docs.name
+//         }, {
+//             "time": i
+//         }, {
+//             "location": docs.location
+//         }]);
+//     });
+// }
 
 
-    Horse.findOne({
-        name: "Alpha"
-    }).then(function (docs) {
-        docs.location = docs.speed * i;
 
-        p.emit('serverMessage', [{
-            "name": docs.name
-        }, {
-            "time": i
-        }, {
-            "location": docs.location
-        }]);
-    });
+    // } else if (data.option === 'game') {
+    //     Horse.find({}, {
+    //         _id: 0,
+    //         speed: 1,
+    //         name: 1,
+    //         location: 1,
+    //         zero100: 1,
+    //         maxSpeed: 1,
+    //         fallOff: 1,
+    //         ividendRate: 1,
+    //     }, function (err, horses) {
 
-}
+    //         var i = 1;
+    //         Horse.find({}, function(err, horses) {
+    //             horses.forEach(function (horse) {
+    //                 horse.location = 0;
+    //                 horse.save();
+
+    //             });
+    //         });
+
+            
+
+    //         function myLoop() { //  create a loop function
+    //             setTimeout(function () { //  call a 0.5s setTimeout when the loop is called
+
+
+
+    //                 // a(socket, i);
+    //                 Horse.find({
+    //                     location: {
+    //                         $lt: 500
+    //                     }
+    //                 }, function (err, horses) {
+    //                     horses.forEach(function (horse) {
+    //                         // socket.emit(horse.name, [{"name": horse.name}, {"time":i}, {"location": horse.location}] );
+
+
+    //                         if(horse.location<500) {
+    //                             if((horse.speed*i)>500) {
+
+    //                                 horse.location=500;
+    //                                 socket.emit(horse.name, [{"speed": horse.speed}, {"time":i}, {"location": horse.location}] );
+    //                                 // console.log(1, horse.name, horse.location);
+    //                                 horse.save();
+
+    //                             } else {
+
+    //                                 horse.location=horse.speed*i;
+    //                                 socket.emit(horse.name, [{"speed": horse.speed}, {"time":i}, {"location": horse.location}] );
+    //                                 // console.log(2, horse.name, horse.location);
+    //                                 horse.save();
+
+    //                             }
+    //                         }
+    //                     });
+    //                 });
+    //                 // alert('hello'); //  your code here
+    //                 i++; //  increment the counter
+    //                 if (i < 250) { //  if the counter < 10, call the loop function
+    //                     myLoop(); //  ..  again which will trigger another 
+    //                 } //  ..  setTimeout()
+    //             }, 50)
+    //         }
+
+    //         myLoop(); //  start the loop
+    //     })
+
+
+    // }
+
+
+//     function myLoop() { //  create a loop function
+//         setTimeout(function () { //  call a 0.5s setTimeout when the loop is called
+            
+            
+            
+            
+            
+//             // a(socket, i);
+//             Horse.find({ location: { $lt: 500 }}, function (err, horses) {
+//                 horses.forEach(function (horse) {
+//                     // socket.emit(horse.name, [{"name": horse.name}, {"time":i}, {"location": horse.location}] );
+
+//                         if((horse.speed * i) > 500) {
+//                             horse.location = 500;
+//                             socket.emit(horse.name, horse.lean().exec(function (err, doc) {
+//                                 return JSON.stringify(doc);
+//                                 })
+//                             );
+//                             // socket.emit(horse.name, [
+//                             //     {"speed": horse.speed },
+//                             //     {"time": i},
+//                             //     {"location": horse.location},
+//                             //     {"zero100": horse.zero100}] );
+//                             // console.log(1, horse.name, horse.location);
+//                             horse.save();
+
+//                         } else {
+//                             horse.location = horse.speed * i;
+//                             socket.emit(horse.name, horse.lean().exec(function (err, doc) {
+//                                 return JSON.stringify(doc);
+//                                 })
+//                             );
+//                             // socket.emit(horse.name, [{"speed": horse.speed}, {"time":i}, {"location": horse.location}] );
+//                             // console.log(2, horse.name, horse.location);
+//                             horse.save();
+//                         }
+//                     }
+//                 );
+//             });
+
+//             i++; //  increment the counter
+//             if (i < 250) { //  if the counter < 10, call the loop function
+//                 myLoop(); //  ..  again which will trigger another 
+//             } //  ..  setTimeout()
+//         }, 50)
+//     }
+//     myLoop(); //  start the loop
+// }
