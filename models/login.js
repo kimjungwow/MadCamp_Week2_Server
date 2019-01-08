@@ -5,7 +5,8 @@ var loginSchema = new Schema({
     id: String,
     password: String,
     option: String,
-    number: Number,
-    balance: Number
+    balance: Number,
+    betMoney: Number,
+    horse: String,
 });
 module.exports = mongoose.model('login', loginSchema);

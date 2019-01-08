@@ -101,7 +101,10 @@ module.exports = function (app, Horse) {
             acceleration: req.body.acceleration,
             maxSpeed: req.body.maxSpeed,
             fallOff: req.body.fallOff,
-            dividendRate: req.body.dividendRate
+            dividendRate: req.body.dividendRate,
+            winner: req.body.winner,
+            isFallOff: req.body.isFallOff
+
         }, function (err, horses) {
             if (horses.length === 0) {
                 var horse = new Horse();
@@ -111,7 +114,9 @@ module.exports = function (app, Horse) {
                 horse.acceleration = req.body.acceleration,
                 horse.maxSpeed = req.body.maxSpeed,
                 horse.fallOff = req.body.fallOff,
-                horse.dividendRate = req.body.dividendRate
+                horse.dividendRate = req.body.dividendRate,
+                horse.winner = req.body.winner,
+                horse.isFallOff = req.body.isFallOff
 
                 horse.save(function (err) {
                     if (err) {

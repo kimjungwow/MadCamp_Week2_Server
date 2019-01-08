@@ -4,6 +4,7 @@ var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
+mongoose.Promise = require('bluebird');
 
 // CONNECT TO MONGODB SERVER
 var db = mongoose.connection;
@@ -51,7 +52,8 @@ var io = socketio.listen(server);
 
 var gameProceeding = false;
 
-var minutes = 2, the_interval = minutes * 60 * 1000;
+var minutes = 0.5, the_interval = minutes * 60 * 1000;
+// var the_interval = 15 * 1000;
 
 setInterval(function() {
   console.log("START A GAME!");
@@ -90,13 +92,6 @@ io.sockets.on('connection', function (socket) {
                             socket.disconnect(true);
                         } else {
                             console.log('Sign In successfully');
-                            // Login.find({id:data.id, password:data.password}, function(err,logins) {
-                            //     logins.forEach(function (login) {
-                            //         console.log(JSON.stringify(login));
-                            //         socket.emit("userInfo2", JSON.stringify(login));    
-
-                            //     })
-                            // });
 
                             Login.findOne({id: data.id}).lean().exec(function (err, login) {
                                 console.log(JSON.stringify(login));
@@ -125,6 +120,8 @@ io.sockets.on('connection', function (socket) {
 
                     // Set initial balance
                     login.balance = 300000;
+                    login.betMoney = 0;
+                    login.horse = "NOTHING"
 
 
                     login.save(function (err) {
@@ -151,77 +148,165 @@ io.sockets.on('connection', function (socket) {
         } else if (data.option === 'game') {
             Horse.find().lean().exec(function (err, horses) {
                 console.log(JSON.stringify(horses));
-                socket.emit("HorseInfo", JSON.stringify(horses));
+                socket.emit("FirstHorseInfo", JSON.stringify(horses));
             });
         }
     });
 
     socket.on('gameMessage', function (data) {
 
-        socket.join('GAME');
+        // socket.nickname = data.id;
+        // console.log(socket.nickname);
 
-        var userID = data.id;
-        var userBetMoney = data.betmoney;
-        var selectedHorse = data.sel_name;
+        Login.update({ "id": data.id }, { $set: { "horse": data.sel_name, "betMoney": data.betmoney }}).then(() => {
+            socket.join('GAME');
+        });
+       
+        
+
     });
 });
 
 function StartNewGame () {
+    Horse.updateMany({}, { $set: { location: 0, winner: false, isFallOff: false }}, (err) => {
+        if(err) {
+            return console.log("Error on update");
+        }
+        Login.find({}, function(err, users) {
+            users.forEach(function(user) {
+                user.balance -= user.betMoney;
+                user.save();
+            });
+            gameProceeding = true;
+    
+        
+        var i = 1;
+    
+        function myLoop() { //  create a loop function
+            setTimeout(function () { //  call a 0.5s setTimeout when the loop is called
 
-    gameProceeding = true;
+                Horse.find({}, function (err, horses) {
 
-    Horse.updateMany({},{ $set: { location: 0 }});
-
-    var i = 1;
-
-    function myLoop() { //  create a loop function
-        setTimeout(function () { //  call a 0.5s setTimeout when the loop is called
-
-            Horse.find({}, function (err, horses) {
-                horses.forEach(function (horse) {
+                    horses.forEach(function (horse) {
+                        if(i % 10 === 0) {
+                            if (doRoulette(horse.fallOff)) {
+                                horse.isFallOff = true;
+                                horse.save();
+                            } else {
+                                horse.isFallOff = false;
+                                horse.save();
+                            }
+                        }
                         if((horse.location) > 500) {
                             horse.location = 500;
                             horse.save();
-
-                        } else {
-                            horse.location = horse.speed * i;
+                        } else if (!horse.isFallOff && horse.speed >= horse.maxSpeed){
+                            horse.speed = horse.maxSpeed;
+                            horse.location = (horse.speed * i);
+                            if( horse.location > 500 ) { horse.location = 500; }
+                            horse.save();
+                        } else if (!horse.isFallOff) {
+                            horse.speed += horse.acceleration/10;
+                            horse.location = (horse.speed * i);
+                            if( horse.location > 500 ) { horse.location = 500; }
                             horse.save();
                         }
-                    }
-                );
-            });
-
-            Horse.find().lean().exec(function (err, horses) {
-                console.log(JSON.stringify(horses));
-                io.to('GAME').emit("HorseInfo", JSON.stringify(horses));
-            });
-
-            i++; //  increment the counter
-
-            Horse.count({ location: 500 }, function (err, count) {
-                if(count === 1) {
-                    Horse.findOne({ location: 500 }, function(err, horse) {
-                        horse.winner = true;
-                        horse.save();
-                        myLoop();
                     });
-                } else if(count === 5) {
-                    // SEND GAME RESULT
-                    io.to('GAME').emit("GameResult", JSON.stringify());
-                    gameProceeding = false;
 
-                } else {
-                    myLoop();
-                }
-            });
+                    Horse.find().lean().exec(function (err, horses) {
+                        // console.log(JSON.stringify(horses));
+                        io.to('GAME').emit("HorseInfo", JSON.stringify(horses));
 
-            // if (i < 300) { //  if the counter < 300 (30sec), call the loop function
-            //     myLoop(); //  ..  again which will trigger another 
-            // } //  ..  setTimeout()
-        }, 100) // 0.1 sec
-    }
+                        i++; //  increment the counter
 
-    myLoop(); //  start the loop
+                        Horse.count({ location: { $gte: 500 }}, function (err, count) {
+                            if(count === 5) {
+                                // SET USER INFO
+                                Horse.findOne({ "winner": true }, function(err, horse) {
+                                    
+                                    //Login.updateMany({"horse": horse.name}, )
+                                    Login.find({ "horse": horse.name }, function(err, users) {
+                                        // Login.find
+                                        
+                                        users.forEach(function(user) {
+                                            user.balance += horse.dividendRate * user.betMoney;
+                                            user.save();
+                                        });
+
+                                        // Login.updateMany({},{$set:{horse: horse.name}});
+        
+                                        // io.of('/').in('GAME').clients(function(error, clients){
+                                        //     console.log("client!");
+                                        //     clients.forEach(function(client) {
+                                        //         console.log(client.nickname);
+                                        //         Login.findOne({"id": client.nickname}, function(err, user){
+                                        //             console.log(user);
+                                        //             client.emit('GameResult', JSON.stringify({
+                                        //                 "balance": user.balance,
+                                        //                 "winner": horse.name
+                                        //             }));
+                                        //         });
+                                        //     });
+                                        // });
+                                        
+                                        
+                                    }).then(Login.updateMany({},{$set:{horse: horse.name}}).then(setTimeout(function() {
+                                        Login.find().lean().exec(function (err, users) {
+                                            console.log(users);
+                                            io.to('GAME').emit("GameResult", JSON.stringify(users));
+                                            // Login.updateMany({}, { $set: { betMoney: 0, horse: "NOTHING" }}, (err) => {
+                                            //     if(err) {
+                                            //         return console.log("Error on update");
+                                            //     }
+                                            // });
+                                        });
+                                        gameProceeding = false;
+                                    },1000)));
+                                });
+                            } else if(count === 1) {
+                                // Horse.findOne({ location: { $gte: 500 }}, function(err, horse) {
+                                //         console.log(horse);
+                                //         horse.winner = true;
+                                //         horse.save();
+                                //         myLoop();
+                                // });
+            
+                                Horse.find({location: {$gte:500}}, function(err, horses) {
+                                    horses.forEach(function (horse) {
+                                        console.log(horse);
+                                        horse.winner = true;
+                                        horse.save();
+                                        myLoop();
+                                    });
+                                });
+                            } else {
+                                myLoop();
+                            }
+                        });
+                    });
+                });
+                // if (i < 300) { //  if the counter < 300 (30sec), call the loop function
+                //     myLoop(); //  ..  again which will trigger another 
+                // } //  ..  setTimeout()
+            }, 100) // 0.1 sec
+        }
+
+        myLoop(); //  start the loop
+        });
+    });
+    
+}
+
+
+function doRoulette (percentage) {
+    var randomNum = getRandomFloat(0, 1);
+    if(randomNum < percentage ) {
+        return true;
+    } return false;
+}
+
+function getRandomFloat(min, max) { //min ~ max 사이의 임의의 정수 반환
+    return (Math.random() * (max - min)) + min;
 }
 
 
