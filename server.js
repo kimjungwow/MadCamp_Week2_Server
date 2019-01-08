@@ -75,7 +75,6 @@ setInterval(function () {
 }, the_interval);
 
 
-
 io.sockets.on('connection', function (socket) {
     console.log('Socket ID : ' + socket.id + ', Connect');
     socket.on('clientMessage', function (data) {
