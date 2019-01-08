@@ -90,7 +90,6 @@ io.sockets.on('connection', function (socket) {
                             Login.findOne({id: data.id}).lean().exec(function (err, login) {
                                 console.log(JSON.stringify(login));
                                 socket.emit("userInfo2", JSON.stringify(login));
-                                socket.emit("userInfo2", JSON.stringify(login));
                                 socket.disconnect(true);
                             });
                             
