@@ -63,7 +63,7 @@ io.sockets.on('connection', function (socket) {
                         result: '0',
                         alert: 'Account does not exist.'
                     };
-                    socket.emit('serverMessage', loginresult);
+                    socket.emit("userInfo2", loginresult);
                     socket.disconnect(true);
                 } else {
                     Login.find({
@@ -75,17 +75,25 @@ io.sockets.on('connection', function (socket) {
                                 result: '1'
                             };
                             console.log('changed' + loginresult.result);
-                            socket.emit('serverMessage', loginresult);
+                            socket.emit("userInfo2", loginresult);
                             socket.disconnect(true);
                         } else {
                             console.log('Sign In successfully');
-                            loginresult = {
-                                result: '2',
-                                alert: 'Sign In successfully'
-                            };
-                            console.log("changed" + loginresult.result);
-                            socket.emit('serverMessage', loginresult);
-                            socket.disconnect(true);
+                            // Login.find({id:data.id, password:data.password}, function(err,logins) {
+                            //     logins.forEach(function (login) {
+                            //         console.log(JSON.stringify(login));
+                            //         socket.emit("userInfo2", JSON.stringify(login));    
+
+                            //     })
+                            // });
+
+                            Login.findOne({id: data.id}).lean().exec(function (err, login) {
+                                console.log(JSON.stringify(login));
+                                socket.emit("userInfo2", JSON.stringify(login));
+                                socket.emit("userInfo2", JSON.stringify(login));
+                                socket.disconnect(true);
+                            });
+                            
                         }
                     });
 
@@ -115,10 +123,8 @@ io.sockets.on('connection', function (socket) {
                             return;
                         }
                         console.log('saved successfully');
-                        loginresult = {
-                            result: '2'
-                        };
-                        socket.emit('serverMessage', loginresult);
+                        console.log(JSON.stringify(login));
+                        socket.emit("userInfo", JSON.stringify(login));
                         socket.disconnect(true);
                     });
                 } else {
@@ -128,13 +134,15 @@ io.sockets.on('connection', function (socket) {
                         alert: "Account already exists"
 
                     };
-                    socket.emit('serverMessage', loginresult);
+                    socket.emit("userInfo", loginresult);
                     socket.disconnect(true);
                 }
             });
         } else if (data.option === 'game') {
             Horse.updateMany({},{ $set: { location: 0 }});
 
+            // location 0 -> 10000
+            // n seconds
             var i = 1;
 
             function myLoop() { //  create a loop function
@@ -163,7 +171,7 @@ io.sockets.on('connection', function (socket) {
                     if (i < 250) { //  if the counter < 10, call the loop function
                         myLoop(); //  ..  again which will trigger another 
                     } //  ..  setTimeout()
-                }, 50)
+                }, 100) // 0.1 sec
             }
             myLoop(); //  start the loop
         }

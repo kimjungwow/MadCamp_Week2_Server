@@ -3,11 +3,11 @@ const { MongoClient } = require('mongodb');
 var express = require('express');
 var router = express.Router();
 
-module.exports = function (app, Contact) {
+module.exports = function (app, Horse) {
 
     // GET ALL CONTACTS
     router.get('', function (req, res) {
-        Contact.find(function (err, contacts) {
+        Horse.find(function (err, contacts) {
             if (err) return res.status(500).send({
                 error: 'database failure'
             });
@@ -94,27 +94,27 @@ module.exports = function (app, Contact) {
 
     // CREATE CONTACT
     router.post('', function (req, res) {
+        Horse.find({
+            name: req.body.name,
+            speed: req.body.speed,
+            location: req.body.location,
+            acceleration: req.body.acceleration,
+            maxSpeed: req.body.maxSpeed,
+            fallOff: req.body.fallOff,
+            dividendRate: req.body.dividendRate
+        }, function (err, horses) {
+            if (horses.length === 0) {
+                var horse = new Horse();
+                horse.name = req.body.name,
+                horse.speed = req.body.speed,
+                horse.location = req.body.location,
+                horse.acceleration = req.body.acceleration,
+                horse.maxSpeed = req.body.maxSpeed,
+                horse.fallOff = req.body.fallOff,
+                horse.dividendRate = req.body.dividendRate
 
-
-        Contact.find({
-            fbid: req.body.fbid,
-            name: req.body.name
-        }, function (err, contacts) {
-            console.log("count : %d, fbid : %s, name : %s", contacts.length, req.body.fbid, req.body.name);
-
-
-            if (contacts.length === 0) {
-
-
-                var contact = new Contact();
-                contact.name = req.body.name;
-                contact.number = req.body.number;
-                contact.img = req.body.img;
-                contact.fbid = req.body.fbid;
-
-                contact.save(function (err) {
+                horse.save(function (err) {
                     if (err) {
-                        console.log("111");
                         console.error(err);
                         res.json({
                             result: 0
@@ -134,8 +134,6 @@ module.exports = function (app, Contact) {
                 return;
             }
         });
-
-
     });
 
 

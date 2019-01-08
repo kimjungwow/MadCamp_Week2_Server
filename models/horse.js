@@ -5,7 +5,7 @@ var horseSchema = new Schema({
     name: String,
     speed: Number,
     location: Number,
-    zero100: Number,
+    acceleration: Number,
     maxSpeed: Number,
     fallOff: Number,
     dividendRate: Number,
