@@ -143,12 +143,18 @@ module.exports = function (app, Horse) {
 
 
     // UPDATE THE CONTACT
-    router.put('/:contact_id', function (req, res) {
-        Contact.update({
-            _id: req.params.contact_id,
-            fbid: req.body.fbid,
-            name: req.body.name,
-            number: req.body.number
+    router.put('/:horse_id', function (req, res) {
+        Horse.update({
+            _id: req.params.horse_id,
+            // name: req.body.name,
+            // speed: req.body.speed,
+            // location: req.body.location,
+            // acceleration: req.body.acceleration,
+            // maxSpeed: req.body.maxSpeed,
+            // fallOff: req.body.fallOff,
+            // dividendRate: req.body.dividendRate,
+            // winner: req.body.winner,
+            // isFallOff: req.body.isFallOff
         }, {
             $set: req.body
         }, function (err, output) {
@@ -203,7 +209,7 @@ module.exports = function (app, Horse) {
 
     // DELETE ALL CONTACTS
     router.delete('', function (req, res) {
-        Contact.remove({}, function (err, output) {
+        Horse.remove({}, function (err, output) {
             if (err) return res.status(500).json({
                 error: "database failure"
             });
