@@ -9,6 +9,7 @@ var horseSchema = new Schema({
     maxSpeed: Number,
     fallOff: Number,
     dividendRate: Number,
+    winner: Boolean
 });
 
 module.exports = mongoose.model('horse', horseSchema);
